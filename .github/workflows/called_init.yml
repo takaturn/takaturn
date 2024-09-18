@@ -1,0 +1,53 @@
+name: Reusable workflow sample
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: false
+        type: string
+        description: "os for run-on"
+        default: ubuntu-latest
+    outputs:
+      build:
+        value: ${{ jobs.build.outputs.out_build }}
+
+env:
+  PATH_CACHE: "/tmp/docker-img-arch"  # Dockerイメージ出力パス
+  BASE_IMAGE: "debian:11-slim"
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    outputs:
+      out_build: ${{ steps.gen_output.outputs.xxx }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create image tag
+        id: imagetag
+        run: |
+          PATH_TAR=${{ env.BASE_IMAGE }}
+          PATH_TAR="${PATH_TAR/#:/_}.tar"
+          PATH_TAR=${{ env.PATH_CACHE }}"/${PATH_TAR}"
+          echo "PATH_TAR=${PATH_TAR}" >> $GITHUB_OUTPUT
+      - name: Enable cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PATH_CACHE }}
+          key: ${{ env.BASE_IMAGE }}
+      - name: Load Docker image if exists
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          docker load --input ${{ steps.imagetag.outputs.PATH_TAR }}
+      - name: Build Docker image and save
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ env.PATH_CACHE }}
+          docker pull ${{ env.BASE_IMAGE }}
+          docker save --output ${{ steps.imagetag.outputs.PATH_TAR }} ${{ env.BASE_IMAGE }}
+      - name: Run a multi-line script
+        id: gen_output
+        run: |
+          out=$(docker run --rm ${{ env.BASE_IMAGE }} cat /etc/os-release)
+          echo "xxx=${out}" >> "$GITHUB_OUTPUT"
