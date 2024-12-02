@@ -1,0 +1,18 @@
+services:
+  debian:
+    image: local/debian:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    tty: true
+    stdin_open: true
+    networks:
+      - net_i
+      - net_e
+
+networks:
+  net_i:
+    name: net_internal
+    internal: true
+  net_e:
+    name: net_external
