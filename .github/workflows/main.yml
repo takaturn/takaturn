@@ -22,7 +22,6 @@ jobs:
       - name: Validate Inputs
         run: |
           echo "test"
-          exit 1
 
   # This workflow contains a single job called "build"
   main:
@@ -35,13 +34,16 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Docker Build
-        run: |
-          docker buildx version
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-actions@v3
 
       - name: Docker Build
+        uses: docker/bake-action@v5
+        with:
+          push: false
+
+      - name: Docker Build Check
         run: |
-          docker compose build
           docker compose images
 
   finalize:
