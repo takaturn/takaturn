@@ -13,10 +13,19 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Inputs
+        run: |
+          echo "test"
+
   # This workflow contains a single job called "build"
-  build:
+  main:
+    needs: initialize
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -33,3 +42,15 @@ jobs:
         run: |
           docker compose build
           docker compose images
+
+  finalize:
+    needs: main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check
+        run: |
+          if [ ${{ jobs.main.result == "failure" }} ]; then
+            return 1
+          else
+            return 0
+          fi
