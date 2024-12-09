@@ -13,10 +13,19 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Inputs
+        run: |
+          echo "test"
+
   # This workflow contains a single job called "build"
-  build:
+  main:
+    needs: initialize
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -25,11 +34,30 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Docker Build
-        run: |
-          docker buildx version
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Docker Build
+        uses: docker/bake-action@v5
+        with:
+          push: false
+
+      - name: Docker Build Check
         run: |
-          docker compose build
+          docker compose up -d
+          docker compose exec debian bash -c "nvim --version"
           docker compose images
+          docker compose down
+
+  finalize:
+    needs: main
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check
+        run: |
+          if [ ${{ needs.main.result }} == "failure" ]; then
+            exit 1
+          else
+            exit 0
+          fi
