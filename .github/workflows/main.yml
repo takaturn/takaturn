@@ -22,6 +22,7 @@ jobs:
       - name: Validate Inputs
         run: |
           echo "test"
+          exit 1
 
   # This workflow contains a single job called "build"
   main:
@@ -46,6 +47,7 @@ jobs:
   finalize:
     needs: main
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Check
         run: |
