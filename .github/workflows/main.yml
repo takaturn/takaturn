@@ -49,8 +49,8 @@ jobs:
     steps:
       - name: Check
         run: |
-          if [ ${{ jobs.main.result }} == "failure" ]; then
-            return 1
+          if [ ${{ needs.main.result }} == "failure" ]; then
+            exit 1
           else
-            return 0
+            exit 0
           fi
