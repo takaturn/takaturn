@@ -44,7 +44,10 @@ jobs:
 
       - name: Docker Build Check
         run: |
+          docker compose up -d
+          docker compose exec debian bash -c "nvim --version"
           docker compose images
+          docker compose down
 
   finalize:
     needs: main
